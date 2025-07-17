@@ -13,7 +13,7 @@ exports.getUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { username, password, phone, role, status, created_by, updated_by } = req.body;
+    const { username, password, phone, role, created_by, updated_by } = req.body;
 
     const checkDuplicate = await prisma.user.findFirst({
       where: {
