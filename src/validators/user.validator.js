@@ -49,5 +49,10 @@ const loginValidationRules = () => [
     .matches(/[0-9]/)
     .withMessage("Password must contain at least one number."),
 ];
-
-module.exports = { registerValidationRules, updateValidationRules, loginValidationRules };
+const updateCreditValidationRules = () => [body("credit").trim().isInt({ min: 0, max: 1000 }).withMessage("Age must be a number between 0 and 1000")];
+module.exports = {
+  registerValidationRules,
+  updateValidationRules,
+  loginValidationRules,
+  updateCreditValidationRules,
+};

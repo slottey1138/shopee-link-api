@@ -1,19 +1,20 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-exports.getUsers = async (req, res) => {
+exports.getUsers = async (req, res, next) => {
   try {
     const users = await prisma.user.findMany();
     res.json(users);
   } catch (error) {
-    throw new Error(error.message);
+    next(error);
   }
 };
 
-exports.createUser = async (req, res) => {
+exports.createUser = async (req, res, next) => {
   try {
-    const { username, password, phone, role, created_by, updated_by } = req.body;
+    const { username, password, phone, role, status, created_by, updated_by } = req.body;
 
     const checkDuplicate = await prisma.user.findFirst({
       where: {
@@ -28,7 +29,11 @@ exports.createUser = async (req, res) => {
       },
     });
 
-    if (checkDuplicate) throw new Error("Username or Phone already exists");
+    if (checkDuplicate) {
+      return res.status(400).json({
+        message: "Username or Phone already exists",
+      });
+    }
 
     const hashPassword = await bcrypt.hash(password, 10);
 
@@ -43,13 +48,16 @@ exports.createUser = async (req, res) => {
         updatedBy: updated_by,
       },
     });
-    res.json(user);
+
+    res.json({
+      message: "Registration completed successfully.",
+    });
   } catch (error) {
-    throw new Error(error.message);
+    next(error);
   }
 };
 
-exports.updateUser = async (req, res) => {
+exports.updateUser = async (req, res, next) => {
   try {
     const { user_id } = req.params;
     const { username, password, status, updated_by } = req.body;
@@ -85,11 +93,11 @@ exports.updateUser = async (req, res) => {
     });
     res.json(user);
   } catch (error) {
-    throw new Error(error.message);
+    next(error);
   }
 };
 
-exports.deleteUser = async (req, res) => {
+exports.deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await prisma.user.delete({
@@ -97,44 +105,72 @@ exports.deleteUser = async (req, res) => {
     });
     res.json(user);
   } catch (error) {
-    throw new Error(error.message);
+    next(error);
   }
 };
 
-exports.updateUserCredit = async (req, res) => {
+exports.updateUserCredit = async (req, res, next) => {
   try {
     const { user_id } = req.params;
     const { credit } = req.body;
 
-    const user = await prisma.user.update({
+    await prisma.user.update({
       where: { user_id: parseInt(user_id) },
       data: {
-        credit: credit,
-        updatedBy: updated_by,
+        credit: Number(credit),
       },
     });
-    res.json(user);
+    res.json({
+      message: "Update credit completed successfully.",
+    });
   } catch (error) {
-    throw new Error(error.message);
+    next(error);
   }
 };
-
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
-    const secret = precess.env.JWT_SECRET;
-
-    const secretKey = Buffer.from(secret, "utf8");
-
-    const checkUser = prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         username: username,
       },
     });
 
-    if (!checkUser) throw new Error("ไม่มีผู้ใช้นี้ในระบบ");
+    if (!user) {
+      return res.status(400).json({
+        message: "This user does not exist",
+      });
+    }
 
-    // const checkPassword = await
-  } catch (error) {}
+    // if (user.credit <= 0) {
+    //   res.status(400).json({
+    //     message: "This user has exprired",
+    //   });
+    // }
+
+    const checkPassword = await bcrypt.compare(password, user?.password);
+
+    if (!checkPassword) {
+      return res.status(400).json({
+        message: "Password is incorrect",
+      });
+    }
+
+    const secret = process.env.JWT_SECRET;
+    const secretKey = Buffer.from(secret, "utf8");
+
+    delete user?.password;
+
+    const token = await jwt.sign(user, secretKey, {
+      algorithm: "HS256",
+      expiresIn: "1h",
+    });
+
+    return res.json({
+      token: token,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
