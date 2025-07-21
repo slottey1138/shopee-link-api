@@ -5,7 +5,11 @@ const jwt = require("jsonwebtoken");
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      where: {
+        role: "USER",
+      },
+    });
     res.json(users);
   } catch (error) {
     next(error);
@@ -14,7 +18,7 @@ exports.getUsers = async (req, res, next) => {
 
 exports.createUser = async (req, res, next) => {
   try {
-    const { username, password, phone, role, status, created_by, updated_by } = req.body;
+    const { username, password, phone, role, created_by, updated_by } = req.body;
 
     const checkDuplicate = await prisma.user.findFirst({
       where: {
@@ -37,7 +41,7 @@ exports.createUser = async (req, res, next) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         username: username,
         password: hashPassword,
@@ -57,12 +61,25 @@ exports.createUser = async (req, res, next) => {
   }
 };
 
+exports.getUser = async (req, res, next) => {
+  try {
+    const { user_id } = req.params;
+    const user = await prisma.user.findFirst({
+      where: {
+        user_id: Number(user_id),
+      },
+    });
+    delete user.password;
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.updateUser = async (req, res, next) => {
   try {
     const { user_id } = req.params;
-    const { username, password, status, updated_by } = req.body;
-
-    const hashPassword = await bcrypt.hash(password, 10);
+    const { username, status, updated_by, credit, phone } = req.body;
 
     const checkDuplicate = await prisma.user.findFirst({
       where: {
@@ -83,15 +100,15 @@ exports.updateUser = async (req, res, next) => {
     if (checkDuplicate) throw new Error("Username or Phone already exists");
 
     const user = await prisma.user.update({
-      where: { user_id: parseInt(id) },
+      where: { user_id: parseInt(user_id) },
       data: {
-        username,
-        status,
-        password: hashPassword,
-        updatedBy: updated_by,
+        username: username,
+        status: Number(status),
+        credit: Number(credit),
+        phone: phone,
       },
     });
-    res.json(user);
+    res.json({ message: "Update user successful." });
   } catch (error) {
     next(error);
   }
@@ -99,11 +116,11 @@ exports.updateUser = async (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { user_id } = req.params;
     const user = await prisma.user.delete({
-      where: { user_id: parseInt(id) },
+      where: { user_id: parseInt(user_id) },
     });
-    res.json(user);
+    res.json({ message: "Delete user successful." });
   } catch (error) {
     next(error);
   }
