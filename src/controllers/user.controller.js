@@ -160,11 +160,11 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    // if (user.credit <= 0) {
-    //   res.status(400).json({
-    //     message: "This user has exprired",
-    //   });
-    // }
+    if (user.role === "USER" && user.credit <= 0) {
+      res.status(400).json({
+        message: "This user has exprired",
+      });
+    }
 
     const checkPassword = await bcrypt.compare(password, user?.password);
 
