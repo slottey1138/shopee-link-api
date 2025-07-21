@@ -203,10 +203,12 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    if ((user.role === "USER" && user.credit <= 0) || user.status != 1) {
-      res.status(400).json({
-        message: "ชื่อผู้ใช้งานนี้ไม่พร้อมใช้งาน กรุณาติดต่อผู้ดูแลระบบ",
-      });
+    if (user.role === "USER") {
+      if (user.credit <= 0 || user.status != 1) {
+        return res.status(400).json({
+          message: "ชื่อผู้ใช้งานนี้ไม่พร้อมใช้งาน กรุณาติดต่อผู้ดูแลระบบ",
+        });
+      }
     }
 
     const checkPassword = await bcrypt.compare(password, user?.password);
