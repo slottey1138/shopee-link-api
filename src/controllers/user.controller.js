@@ -5,12 +5,36 @@ const jwt = require("jsonwebtoken");
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const users = await prisma.user.findMany({
+    const { user_id } = req.params;
+    const user = await prisma.user.findFirst({
       where: {
-        role: "USER",
+        user_id: Number(user_id),
       },
     });
-    res.json(users);
+
+    const role = user?.role;
+
+    if (role === "SUPERADMIN") {
+      const users = await prisma.user.findMany({
+        where: {
+          NOT: {
+            role: "SUPERADMIN",
+          },
+        },
+      });
+
+      res.json(users);
+    } else if (role === "ADMIN") {
+      const users = await prisma.user.findMany({
+        where: {
+          role: "USER",
+        },
+      });
+
+      res.json(users);
+    } else {
+      res.json([]);
+    }
   } catch (error) {
     next(error);
   }
@@ -18,7 +42,7 @@ exports.getUsers = async (req, res, next) => {
 
 exports.createUser = async (req, res, next) => {
   try {
-    const { username, password, phone, role, created_by, updated_by } = req.body;
+    const { username, password, phone, credit, role, status, created_by, updated_by } = req.body;
 
     const checkDuplicate = await prisma.user.findFirst({
       where: {
@@ -47,14 +71,15 @@ exports.createUser = async (req, res, next) => {
         password: hashPassword,
         phone: phone,
         role: role,
-        status: 2,
+        credit: credit,
+        status: Number(status),
         createdBy: created_by,
         updatedBy: updated_by,
       },
     });
 
     res.json({
-      message: "ลงทะเบียนสำเร็จ",
+      message: "เพิ่มผู้ใช้งานสำเร็จ",
     });
   } catch (error) {
     next(error);
@@ -79,7 +104,7 @@ exports.getUser = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
   try {
     const { user_id } = req.params;
-    const { username, status, updated_by, credit, phone } = req.body;
+    const { username, status, role, credit, phone, password } = req.body;
 
     const checkDuplicate = await prisma.user.findFirst({
       where: {
@@ -99,16 +124,34 @@ exports.updateUser = async (req, res, next) => {
 
     if (checkDuplicate) throw new Error("มีชื่อผู้ใช้ หรือ เบอร์โทรศัพท์นี้ในระบบแล้ว");
 
-    const user = await prisma.user.update({
-      where: { user_id: parseInt(user_id) },
-      data: {
-        username: username,
-        status: Number(status),
-        credit: Number(credit),
-        phone: phone,
-      },
-    });
-    res.json({ message: "แก้ไขผู้ใข้งานสำเร็จ" });
+    if (password.length > 0) {
+      const hashPassword = await bcrypt.hash(password, 10);
+
+      await prisma.user.update({
+        where: { user_id: parseInt(user_id) },
+        data: {
+          username: username,
+          status: Number(status),
+          credit: Number(credit),
+          phone: phone,
+          role: role,
+          password: hashPassword,
+        },
+      });
+      res.json({ message: "แก้ไขผู้ใข้งานสำเร็จ" });
+    } else {
+      await prisma.user.update({
+        where: { user_id: parseInt(user_id) },
+        data: {
+          username: username,
+          status: Number(status),
+          credit: Number(credit),
+          phone: phone,
+          role: role,
+        },
+      });
+      res.json({ message: "แก้ไขผู้ใข้งานสำเร็จ" });
+    }
   } catch (error) {
     next(error);
   }
@@ -160,9 +203,9 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    if (user.role === "USER" && user.credit <= 0) {
+    if ((user.role === "USER" && user.credit <= 0) || user.status != 1) {
       res.status(400).json({
-        message: "ชื่อผู้ใช้งานนี้หมดอายุ",
+        message: "ชื่อผู้ใช้งานนี้ไม่พร้อมใช้งาน กรุณาติดต่อผู้ดูแลระบบ",
       });
     }
 
@@ -186,6 +229,51 @@ exports.login = async (req, res, next) => {
 
     return res.json({
       token: token,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.register = async (req, res, next) => {
+  try {
+    const { username, password, phone, role, created_by, updated_by } = req.body;
+
+    const checkDuplicate = await prisma.user.findFirst({
+      where: {
+        OR: [
+          {
+            username: username,
+          },
+          {
+            phone: phone,
+          },
+        ],
+      },
+    });
+
+    if (checkDuplicate) {
+      return res.status(400).json({
+        message: "มีชื่อผู้ใช้ หรือ เบอร์โทรศัพท์นี้ในระบบแล้ว",
+      });
+    }
+
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    await prisma.user.create({
+      data: {
+        username: username,
+        password: hashPassword,
+        phone: phone,
+        role: role,
+        status: 2,
+        createdBy: created_by,
+        updatedBy: updated_by,
+      },
+    });
+
+    res.json({
+      message: "ลงทะเบียนสำเร็จ",
     });
   } catch (error) {
     next(error);

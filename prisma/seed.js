@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 async function main() {
   const hashPassword = await bcrypt.hash("Secret1234", 10);
   await prisma.user.create({
-    data: { username: "Admin1234", phone: "0838829298", password: hashPassword, role: "ADMIN", createdBy: 1, updatedBy: 1, status: 1 },
+    data: { username: "Superadmin", phone: "0838829298", password: hashPassword, role: "SUPERADMIN", createdBy: 1, updatedBy: 1, status: 1 },
   });
 
   // Add more seeding logic for other models if needed

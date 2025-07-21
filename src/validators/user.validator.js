@@ -1,55 +1,45 @@
 const { body } = require("express-validator");
 
 const registerValidationRules = () => [
-  body("username").trim().isLength({ min: 6, max: 20 }).withMessage("Username must be 6-20 characters long.").isAlphanumeric().withMessage("Username must be alphanumeric."),
+  body("username").trim().isLength({ min: 6, max: 20 }).withMessage("ชื่อผู้ใช้งานต้องมีความยาว 6-20 ตัวอักษร").isAlphanumeric().withMessage("ชื่อผู้ใช้งานไม่ถูกต้อง"),
 
   body("phone")
     .matches(/^0[0-9]{9}$/)
-    .withMessage("Phone number must be a valid Thai mobile number."),
+    .withMessage("รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"),
 
   body("password")
     .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long.")
+    .withMessage("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร")
     .matches(/[a-z]/)
-    .withMessage("Password must contain at least one lowercase letter.")
+    .withMessage("รหัสผ่านต้องประกอบด้วย a-z")
     .matches(/[A-Z]/)
-    .withMessage("Password must contain at least one uppercase letter.")
+    .withMessage("รหัสผ่านต้องประกอบด้วย A-Z")
     .matches(/[0-9]/)
-    .withMessage("Password must contain at least one number."),
+    .withMessage("รหัสผ่านต้องประกอบด้วย 0-9"),
 ];
 
 const updateValidationRules = () => [
-  body("username").trim().isLength({ min: 6, max: 20 }).withMessage("Username must be 6-20 characters long.").isAlphanumeric().withMessage("Username must be alphanumeric."),
+  body("username").trim().isLength({ min: 6, max: 20 }).withMessage("ชื่อผู้ใช้งานต้องมีความยาว 6-20 ตัวอักษร").isAlphanumeric().withMessage("ชื่อผู้ใช้งานไม่ถูกต้อง"),
 
   body("phone")
     .matches(/^0[0-9]{9}$/)
-    .withMessage("Phone number must be a valid Thai mobile number."),
+    .withMessage("รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"),
 
-  body("credit").notEmpty().withMessage("Credit is required"),
-
-  // body("password")
-  //   .isLength({ min: 8 })
-  //   .withMessage("Password must be at least 8 characters long.")
-  //   .matches(/[a-z]/)
-  //   .withMessage("Password must contain at least one lowercase letter.")
-  //   .matches(/[A-Z]/)
-  //   .withMessage("Password must contain at least one uppercase letter.")
-  //   .matches(/[0-9]/)
-  //   .withMessage("Password must contain at least one number."),
+  body("credit").notEmpty().withMessage("กรุณาระบบข้อมูลเครดิต"),
 ];
 
 const loginValidationRules = () => [
-  body("username").trim().isLength({ min: 6, max: 20 }).withMessage("Username must be 6-20 characters long.").isAlphanumeric().withMessage("Username must be alphanumeric."),
+  body("username").trim().isLength({ min: 6, max: 20 }).withMessage("ชื่อผู้ใช้งานต้องมีความยาว 6-20 ตัวอักษร").isAlphanumeric().withMessage("ชื่อผู้ใช้งานไม่ถูกต้อง"),
 
   body("password")
     .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long.")
+    .withMessage("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร")
     .matches(/[a-z]/)
-    .withMessage("Password must contain at least one lowercase letter.")
+    .withMessage("รหัสผ่านต้องประกอบด้วย a-z")
     .matches(/[A-Z]/)
-    .withMessage("Password must contain at least one uppercase letter.")
+    .withMessage("รหัสผ่านต้องประกอบด้วย A-Z")
     .matches(/[0-9]/)
-    .withMessage("Password must contain at least one number."),
+    .withMessage("รหัสผ่านต้องประกอบด้วย 0-9"),
 ];
 const updateCreditValidationRules = () => [body("credit").trim().isInt({ min: 0, max: 1000 }).withMessage("Age must be a number between 0 and 1000")];
 module.exports = {
