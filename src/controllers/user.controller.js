@@ -35,7 +35,7 @@ exports.createUser = async (req, res, next) => {
 
     if (checkDuplicate) {
       return res.status(400).json({
-        message: "Username or Phone already exists",
+        message: "มีชื่อผู้ใช้ หรือ เบอร์โทรศัพท์นี้ในระบบแล้ว",
       });
     }
 
@@ -54,7 +54,7 @@ exports.createUser = async (req, res, next) => {
     });
 
     res.json({
-      message: "Registration completed successfully.",
+      message: "ลงทะเบียนสำเร็จ",
     });
   } catch (error) {
     next(error);
@@ -97,7 +97,7 @@ exports.updateUser = async (req, res, next) => {
       },
     });
 
-    if (checkDuplicate) throw new Error("Username or Phone already exists");
+    if (checkDuplicate) throw new Error("มีชื่อผู้ใช้ หรือ เบอร์โทรศัพท์นี้ในระบบแล้ว");
 
     const user = await prisma.user.update({
       where: { user_id: parseInt(user_id) },
@@ -108,7 +108,7 @@ exports.updateUser = async (req, res, next) => {
         phone: phone,
       },
     });
-    res.json({ message: "Update user successful." });
+    res.json({ message: "แก้ไขผู้ใข้งานสำเร็จ" });
   } catch (error) {
     next(error);
   }
@@ -120,7 +120,7 @@ exports.deleteUser = async (req, res, next) => {
     const user = await prisma.user.delete({
       where: { user_id: parseInt(user_id) },
     });
-    res.json({ message: "Delete user successful." });
+    res.json({ message: "ลบผู้ใข้งานสำเร็จ" });
   } catch (error) {
     next(error);
   }
@@ -156,13 +156,13 @@ exports.login = async (req, res, next) => {
 
     if (!user) {
       return res.status(400).json({
-        message: "This user does not exist",
+        message: "ไม่มีผู้ใข้งานนี้ในระบบ",
       });
     }
 
     if (user.role === "USER" && user.credit <= 0) {
       res.status(400).json({
-        message: "This user has exprired",
+        message: "ชื่อผู้ใช้งานนี้หมดอายุ",
       });
     }
 
@@ -170,7 +170,7 @@ exports.login = async (req, res, next) => {
 
     if (!checkPassword) {
       return res.status(400).json({
-        message: "Password is incorrect",
+        message: "รหัสผ่านไม่ถูกต้อง",
       });
     }
 
